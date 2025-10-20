@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陈齐 - 艺术家个人网站</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Raleway:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#1a1a1a',
+                        light: '#f5f5f5',
+                        neon: '#ff3366',
+                        accent: '#3399ff'
+                    },
+                    fontFamily: {
+                        display: ['Playfair Display', 'serif'],
+                        sans: ['Raleway', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* 自定义样式 */
+        body {
+            font-family: 'Raleway', sans-serif;
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px #ff3366, 0 0 10px #ff3366, 0 0 15px #ff3366;
+        }
+        
+        .painting-3d {
+            transform: perspective(1000px) rotateY(10deg);
+            transition: transform 0.5s ease;
+        }
+        
+        .painting-3d:hover {
+            transform: perspective(1000px) rotateY(0);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #ff3366;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -9px;
+            top: 0;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background-color: #ff3366;
+        }
+        
+        .gallery-container {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .gallery-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ff3366;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 移动端菜单 */
+        .mobile-menu {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+        
+        /* 画作卡片动画 */
+        .painting-card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .painting-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff3366;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 w-full bg-dark bg-opacity-90 z-50 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="#home" class="text-2xl font-display font-bold neon-text">陈齐艺术空间</a>
+                
+                <!-- 桌面端导航 -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="hover:text-neon transition-colors">首页</a>
+                    <a href="#about" class="hover:text-neon transition-colors">关于艺术家</a>
+                    <a href="#paintings" class="hover:text-neon transition-colors">画作展示</a>
+                    <a href="#exhibitions" class="hover:text-neon transition-colors">展览日程</a>
+                    <a href="#behind-the-scenes" class="hover:text-neon transition-colors">创作幕后</a>
+                    <a href="#shop" class="hover:text-neon transition-colors">购买画作</a>
+                    <a href="#contact" class="hover:text-neon transition-colors">联系与留言</a>
+                </div>
+                
+                <!-- 移动端菜单按钮 -->
+                <button id="menu-toggle" class="md:hidden text-2xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 移动端菜单 -->
+    <div id="mobile-menu" class="mobile-menu fixed top-0 left-0 w-full h-full bg-dark z-50 fixed p-6">
+        <div class="flex justify-end mb-8">
+            <button id="close-menu" class="text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="flex flex-col space-y-6 text-center">
+            <a href="#home" class="text-xl hover:text-neon transition-colors mobile-nav-link">首页</a>
+            <a href="#about" class="text-xl hover:text-neon transition-colors mobile-nav-link">关于艺术家</a>
+            <a href="#paintings" class="text-xl hover:text-neon transition-colors mobile-nav-link">画作展示</a>
+            <a href="#exhibitions" class="text-xl hover:text-neon transition-colors mobile-nav-link">展览日程</a>
+            <a href="#behind-the-scenes" class="text-xl hover:text-neon transition-colors mobile-nav-link">创作幕后</a>
+            <a href="#shop" class="text-xl hover:text-neon transition-colors mobile-nav-link">购买画作</a>
+            <a href="#contact" class="text-xl hover:text-neon transition-colors mobile-nav-link">联系与留言</a>
+        </div>
+    </div>
+    
+    <!-- Hero 区域 -->
+    <section id="home" class="min-h-screen flex items-center pt-16 relative overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a8d4e3fb6d6143d49e6d9975aa6d6870~tplv-a9rns2rl98-image.image?rcl=20251020202525CD1A64F9EC54A01D1C75&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1763555204&x-signature=7FagcNq75JFdzdRhg5fYZN9LLrU%3D" alt="艺术背景" class="w-full h-full object-cover opacity-20">
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-10 md:mb-0">
+                    <h1 class="text-5xl md:text-7xl font-display font-bold mb-6 neon-text">陈齐</h1>
+                    <p class="text-xl md:text-2xl mb-8">当代艺术家 | 油画创作者</p>
+                    <div class="flex flex-col space-y-4">
+                        <a href="#paintings" class="bg-neon hover:bg-opacity-80 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 inline-block text-center">
+                            浏览画作
+                        </a>
+                        <a href="#about" class="bg-transparent border border-light text-light hover:border-neon hover:text-neon font-bold py-3 px-8 rounded-full transition-all inline-block text-center">
+                            了解更多
+                        </a>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/4ad92e24b1604bd7b6d48ccf4b46794f.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=202510202004475E90E36D4AB90E181B4D&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761566687&x-signature=16Sv91Shc9624H5tEPlgnano%2BQ0%3D" alt="艺术家在工作室" class="rounded-lg shadow-2xl max-w-full h-auto painting-3d">
+                        <div class="absolute -bottom-5 -right-5 bg-neon text-white p-4 rounded-lg shadow-lg">
+                            <p class="font-display italic">创作是灵魂的表达</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 关于艺术家 -->
+    <section id="about" class="py-20 bg-light bg-opacity-90 text-dark">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">关于艺术家</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    探索陈齐的艺术世界和创作理念
+                </p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="md:w-1/2">
+                    <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/e49271c0349f4036aef2da6e9f4c9d34.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=20251020200246B8BECBAA2E29EE1843C5&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761566566&x-signature=laBgXzUuec4I2km0h4AAsVX9AVU%3D" alt="陈齐在工作室" class="rounded-lg shadow-xl w-full h-auto">
+                </div>
+                <div class="md:w-1/2">
+                    <h3 class="text-2xl font-display font-bold mb-4">陈齐</h3>
+                    <p class="text-lg mb-6">
+                        陈齐是一位充满激情的当代艺术家，专注于油画创作。他的作品融合了表现主义的情感张力和印象派的光影处理，
+                        形成了独特的艺术语言。陈齐的创作灵感来源于日常生活中的瞬间和内心的情感体验，
+                        通过色彩和笔触传达出深刻的人文关怀。
+                    </p>
+                    <p class="text-lg mb-6">
+                        他的作品曾在国内外多个艺术展览中展出，并被私人收藏家广泛收藏。陈齐相信艺术是灵魂的镜子，
+                        能够反映人类共同的情感和经历。
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="bg-dark text-light p-4 rounded-lg shadow-lg">
+                            <h4 class="font-bold mb-2">教育背景</h4>
+                            <p>湖南科技大学艺术学士</p>
+                        </div>
+                        <div class="bg-dark text-light p-4 rounded-lg shadow-lg">
+                            <h4 class="font-bold mb-2">艺术风格</h4>
+                            <p>当代表现主义、印象派</p>
+                        </div>
+                        <div class="bg-dark text-light p-4 rounded-lg shadow-lg">
+                            <h4 class="font-bold mb-2">创作媒介</h4>
+                            <p>油画、混合媒介、装置艺术</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 画作展示 -->
+    <section id="paintings" class="py-20 bg-dark text-light">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4 neon-text">画作展示</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    浏览陈齐的精选画作，探索不同系列的艺术表达
+                </p>
+            </div>
+            
+            <!-- 画作筛选 -->
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <button class="painting-filter bg-neon text-white px-6 py-2 rounded-full transition-all active" data-category="all">
+                    全部作品
+                </button>
+                <button class="painting-filter bg-transparent border border-light text-light px-6 py-2 rounded-full hover:border-neon hover:text-neon transition-all" data-category="abstract">
+                    抽象画
+                </button>
+                <button class="painting-filter bg-transparent border border-light text-light px-6 py-2 rounded-full hover:border-neon hover:text-neon transition-all" data-category="landscape">
+                    风景画
+                </button>
+                <button class="painting-filter bg-transparent border border-light text-light px-6 py-2 rounded-full hover:border-neon hover:text-neon transition-all" data-category="portrait">
+                    肖像画
+                </button>
+                <button class="painting-filter bg-transparent border border-light text-light px-6 py-2 rounded-full hover:border-neon hover:text-neon transition-all" data-category="installation">
+                    艺术装置
+                </button>
+            </div>
+            
+            <!-- 画作网格 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- 抽象画 1 -->
+                <div class="painting-card show" data-category="abstract">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/d40d620aebfb44d8845e4d3e6e6a501f.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=rDThYs5QJrRYCpZ7ne0dLOxEDI8%3D" alt="抽象画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">色彩的对话</h3>
+                                <p class="mb-4">2023 | 抽象系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="1">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 抽象画 2 -->
+                <div class="painting-card show" data-category="abstract">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/6dd2a91a3447411b9b3dca864d7f6b1f.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=aKiaqTbCYkZq5B0bvJSHkKgB81k%3D" alt="抽象画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">流动的能量</h3>
+                                <p class="mb-4">2022 | 抽象系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="2">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 风景画 1 -->
+                <div class="painting-card show" data-category="landscape">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/9bc7b0f52c014818a721f72e4db02b25.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=XwCUecfh0SbcPHVeWuwyskk25m4%3D" alt="风景画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">山脉的呼吸</h3>
+                                <p class="mb-4">2023 | 风景系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="3">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 风景画 2 -->
+                <div class="painting-card show" data-category="landscape">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/639e00f2d0e04318a8341c549b97b4d5.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=OlvHmw8r1zMPHAxLklLv8X6PcAQ%3D" alt="风景画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">宁静的溪谷</h3>
+                                <p class="mb-4">2022 | 风景系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="4">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 肖像画 1 -->
+                <div class="painting-card show" data-category="portrait">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ebc81b9821744517a1d8b15d512755a7.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=RWrQf43Dl2yPQrwnYHMcbgn%2BSEo%3D" alt="肖像画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">思考者</h3>
+                                <p class="mb-4">2023 | 肖像系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="5">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 肖像画 2 -->
+                <div class="painting-card show" data-category="portrait">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/a271e394b29b4d31b1e1c532a3e36c9a.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=Ifx0EPjqWyD3F0N3wLdDlPvTFlg%3D" alt="肖像画作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">色彩的灵魂</h3>
+                                <p class="mb-4">2022 | 肖像系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="6">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 艺术装置 -->
+                <div class="painting-card show" data-category="installation">
+                    <div class="relative overflow-hidden rounded-lg shadow-xl group">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/c236981ac9884a17bf51c1f9cf45a66a.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=wEPEMCRw%2BvGPMrylEm%2BP4w9152E%3D" alt="艺术装置作品" class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
+                            <div class="p-6">
+                                <h3 class="text-xl font-display font-bold mb-2">光影的边界</h3>
+                                <p class="mb-4">2023 | 装置系列</p>
+                                <button class="view-painting bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="7">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 加载更多按钮 -->
+            <div class="text-center mt-12">
+                <button id="load-more" class="bg-dark hover:bg-opacity-80 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 inline-block border border-light hover:border-neon">
+                    加载更多作品
+                </button>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 画作详情模态框 -->
+    <div id="painting-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center hidden">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <div class="bg-dark rounded-lg shadow-2xl overflow-hidden">
+                <div class="flex justify-end p-4">
+                    <button id="close-modal" class="text-light hover:text-neon focus:outline-none">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div class="flex flex-col md:flex-row">
+                    <div class="md:w-2/3">
+                        <img id="modal-image" src="" alt="画作详情" class="w-full h-auto">
+                    </div>
+                    <div class="md:w-1/3 p-6 text-light">
+                        <h3 id="modal-title" class="text-2xl font-display font-bold mb-4"></h3>
+                        <div class="mb-6">
+                            <p id="modal-year" class="text-neon mb-2"></p>
+                            <p id="modal-series" class="mb-4"></p>
+                            <p id="modal-description" class="mb-6"></p>
+                            <div class="flex justify-between items-center border-t border-b border-gray-700 py-4 mb-6">
+                                <div>
+                                    <p class="text-sm text-gray-400">尺寸</p>
+                                    <p id="modal-size"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-400">媒介</p>
+                                    <p id="modal-medium"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-400">价格</p>
+                                    <p id="modal-price" class="text-neon"></p>
+                                </div>
+                            </div>
+                            <button id="add-to-cart" class="w-full bg-neon hover:bg-opacity-80 text-white font-bold py-3 px-6 rounded transition-all">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 展览日程 -->
+    <section id="exhibitions" class="py-20 bg-light bg-opacity-90">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">展览日程</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    了解陈齐的最新展览信息，欢迎前来参观。
+                </p>
+            </div>
+            
+            <!-- 展览时间轴 -->
+            <div class="max-w-4xl mx-auto">
+                <!-- 展览 1 -->
+                <div class="timeline-item pl-10 pb-12 relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="text-2xl font-display font-bold mb-2 md:mb-0">色彩的韵律</h3>
+                            <span class="bg-neon text-white text-sm py-1 px-3 rounded-full">当前展览</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">2023年6月15日 - 2023年8月30日</p>
+                        <p class="mb-6">
+                            本次展览将展示陈齐近年来的抽象画作品，探索色彩与情感的关系，以及它们如何影响我们的感知和情绪。
+                        </p>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">地点</p>
+                                <p class="font-semibold">现代艺术博物馆</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">开放时间</p>
+                                <p>周二至周日 10:00 - 18:00</p>
+                            </div>
+                            <a href="#" class="bg-dark hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all">
+                                获取门票
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 展览 2 -->
+                <div class="timeline-item pl-10 pb-12 relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="text-2xl font-display font-bold mb-2 md:mb-0">自然的印记</h3>
+                            <span class="bg-gray-500 text-white text-sm py-1 px-3 rounded-full">即将开展</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">2023年9月15日 - 2023年11月30日</p>
+                        <p class="mb-6">
+                            这个系列的作品灵感来源于大自然的美丽与力量，通过风景画展现自然的变化和永恒。
+                        </p>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">地点</p>
+                                <p class="font-semibold">国家美术馆</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">开放时间</p>
+                                <p>周一至周日 9:30 - 17:30</p>
+                            </div>
+                            <a href="#" class="bg-dark hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all">
+                                预约参观
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 展览 3 -->
+                <div class="timeline-item pl-10 relative">
+                    <div class="timeline-dot"></div>
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="text-2xl font-display font-bold mb-2 md:mb-0">人性的面孔</h3>
+                            <span class="bg-gray-500 text-white text-sm py-1 px-3 rounded-full">即将开展</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">2024年1月10日 - 2024年3月25日</p>
+                        <p class="mb-6">
+                            这个肖像画系列探索了人类情感的多样性和复杂性，通过不同的表情和姿态展现人性的多面性。
+                        </p>
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">地点</p>
+                                <p class="font-semibold">当代艺术中心</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">开放时间</p>
+                                <p>周三至周一 11:00 - 19:00</p>
+                            </div>
+                            <a href="#" class="bg-dark hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all">
+                                预约参观
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 展览现场图片 -->
+            <div class="mt-20">
+                <h3 class="text-2xl font-display font-bold mb-8 text-center">展览现场</h3>
+                <div class="gallery-container flex space-x-4 pb-8">
+                    <div class="gallery-item w-80 h-80 flex-shrink-0">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/e3901ce4f7efd887f9a128df157cbb50~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1766132211&x-signature=fwMm%2Fsy2MbrIFswj926t%2BcfJp%2Bk%3D" alt="展览现场" class="w-full h-full object-cover rounded-lg shadow-lg">
+                    </div>
+                    <div class="gallery-item w-80 h-80 flex-shrink-0">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/b5730690b1bbae22ae8a2cb55edb1309~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1766132211&x-signature=DAhaubCad0GSHg%2FTLulxTcgcKOM%3D" alt="展览现场" class="w-full h-full object-cover rounded-lg shadow-lg">
+                    </div>
+                    <div class="gallery-item w-80 h-80 flex-shrink-0">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/7725bf1db6eb44ce9a7b1b6bbedf8d7a.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=2025102020215791F13C643216CB1C6938&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761567717&x-signature=EfHlic2FS1ci8Sto1%2F9pBJw3ABU%3D" alt="展览现场" class="w-full h-full object-cover rounded-lg shadow-lg">
+                    </div>
+                    <div class="gallery-item w-80 h-80 flex-shrink-0">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/2d621f66be41b23a152b70f0d5a4830e~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1766132216&x-signature=Suolu%2FidRx4YqabIfH%2FD4%2BUhPmw%3D" alt="展览现场" class="w-full h-full object-cover rounded-lg shadow-lg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 创作幕后 -->
+    <section id="behind-the-scenes" class="py-20 bg-dark text-light">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4 neon-text">创作幕后</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    探索陈齐的创作过程、灵感来源和艺术理念。
+                </p>
+            </div>
+            
+            <!-- 创作过程 -->
+            <div class="mb-20">
+                <h3 class="text-2xl font-display font-bold mb-8 text-center">创作过程</h3>
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <div class="md:w-1/2">
+                        <div class="relative">
+                            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/4ad92e24b1604bd7b6d48ccf4b46794f.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=202510202004475E90E36D4AB90E181B4D&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761566687&x-signature=16Sv91Shc9624H5tEPlgnano%2BQ0%3D" alt="创作过程" class="rounded-lg shadow-xl w-full h-auto">
+                            <div class="absolute -top-5 -left-5 bg-neon text-white p-4 rounded-lg shadow-lg">
+                                <p class="font-display italic">灵感的诞生</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2">
+                        <h4 class="text-xl font-display font-bold mb-4">从灵感到作品</h4>
+                        <p class="mb-6">
+                            陈齐的创作过程始于对日常生活的观察和感受。他喜欢在城市中漫步，寻找那些被忽视的美丽瞬间，
+                            或者在自然中沉浸，感受大自然的力量和变化。这些体验会在他的脑海中形成初步的印象和情感。
+                        </p>
+                        <p class="mb-6">
+                            接下来，他会通过草图和笔记记录这些想法，探索不同的构图和色彩方案。
+                            这个阶段是自由而随意的，他允许自己尝试各种可能性，不受任何限制。
+                        </p>
+                        <p>
+                            最后，他会选择最有潜力的想法，开始在画布上创作。这个过程是不断调整和完善的，
+                            他会根据画面的需要随时改变他的想法和技巧，直到作品达到他满意的效果。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 创作花絮 -->
+            <div class="mb-20">
+                <h3 class="text-2xl font-display font-bold mb-8 text-center">创作花絮</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-black bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/e49271c0349f4036aef2da6e9f4c9d34.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=20251020200246B8BECBAA2E29EE1843C5&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761566566&x-signature=laBgXzUuec4I2km0h4AAsVX9AVU%3D" alt="创作花絮" class="w-full h-64 object-cover">
+                        <div class="p-6">
+                            <h4 class="text-xl font-display font-bold mb-2">画室日常</h4>
+                            <p>
+                                陈齐的画室是他最私密的空间，这里充满了颜料、画笔和未完成的作品。
+                                每一天，他都会在这里度过大部分时间，沉浸在创作的世界中。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-black bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ad9ebc62f31042c0abec5c4d3dca6dc5.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=2025102020215791F13C643216CB1C6938&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761567717&x-signature=72D5OVyOIkiIDTtN1OIe0uf1N4o%3D" alt="创作花絮" class="w-full h-64 object-cover">
+                        <div class="p-6">
+                            <h4 class="text-xl font-display font-bold mb-2">色彩实验</h4>
+                            <p>
+                                色彩是陈齐作品中最重要的元素之一。他经常进行色彩实验，探索不同颜色的组合和效果，
+                                寻找最能表达他情感的色彩语言。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-black bg-black bg-opacity-50 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/7725bf1db6eb44ce9a7b1b6bbedf8d7a.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=2025102020215791F13C643216CB1C6938&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761567717&x-signature=EfHlic2FS1ci8Sto1%2F9pBJw3ABU%3D" alt="创作花絮" class="w-full h-64 object-cover">
+                        <div class="p-6">
+                            <h4 class="text-xl font-display font-bold mb-2">展览准备</h4>
+                            <p>
+                                准备展览是一个令人兴奋又紧张的过程。从选择作品到布置展厅厅，每一个细节节都需要精心策划，
+                                以确保观众能够获得最佳的观赏体验。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 灵感来源 -->
+            <div>
+                <h3 class="text-2xl font-display font-bold mb-8 text-center">灵感来源</h3>
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="md:w-1/3 bg-black bg-opacity-50 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-neon text-4xl mb-4">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <h4 class="text-xl font-display font-bold mb-4">大自然</h4>
+                        <p>
+                            大自然然是陈齐最主要的灵感来源源之一。山脉的雄伟、海洋的广阔、森林的神秘，
+                            都给了他无尽的创作灵感。他试图通过他的作品捕捉大自然的美丽和力量。
+                        </p>
+                    </div>
+                    <div class="md:w-1/3 bg-black bg-opacity-50 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-neon text-4xl mb-4">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <h4 class="text-xl font-display font-bold mb-4">城市生活</h4>
+                        <p>
+                            城市是一个充满活力和矛盾盾的地方。高楼大厦与小巷弄堂、快节奏的生活与悠闲的时刻，
+                            这些对比和冲突突给了陈齐很多创作的灵感。
+                        </p>
+                    </div>
+                    <div class="md:w-1/3 bg-black bg-opacity-50 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-neon text-4xl mb-4">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h4 class="text-xl font-display font-bold mb-4">人类情感</h4>
+                        <p>
+                            人类情感是陈齐作品中经常探索的主题。喜悦、悲伤、爱、孤独，这些复杂而深刻的情感，
+                            是他创作的重要动力。他试图通过色彩和形式表达这些无法用语言描述的情感。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 画作购买 -->
+    <section id="shop" class="py-20 bg-light bg-opacity-90">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4">画作购买</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    浏览并购买陈齐的原创画作，每一幅作品都是独一无二的艺术体验。
+                </p>
+            </div>
+            
+            <!-- 购买选项 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- 画作 1 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="relative">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/d40d620aebfb44d8845e4d3e6e6a501f.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=rDThYs5QJrRYCpZ7ne0dLOxEDI8%3D" alt="画作" class="w-full h-64 object-cover">
+                        <div class="absolute top-4 right-4 bg-neon text-white text-sm py-1 px-3 rounded-full">
+                            热销
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-display font-bold text-gray-800">色彩的对话</h3>
+                            <p class="text-neon font-bold">¥800</p>
+                        </div>
+                        <p class="text-gray-600 mb-6">
+                            这幅抽象画探索了色彩之间的相互作用和情感表达，适合现代风格的家居装饰。
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">尺寸: 60 × 80 cm</p>
+                                <p class="text-sm text-gray-500">媒介: 布面油画</p>
+                            </div>
+                            <button class="add-to-cart bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="1" data-title="色彩的对话" data-price="¥800">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 画作 2 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="relative">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/9bc7b0f52c014818a721f72e4db02b25.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=XwCUecfh0SbcPHVeWuwyskk25m4%3D" alt="画作" class="w-full h-64 object-cover">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-display font-bold text-gray-800">山脉的呼吸</h3>
+                            <p class="text-neon font-bold">¥600</p>
+                        </div>
+                        <p class="text-gray-600 mb-6">
+                            这幅风景画捕捉了山脉的雄伟和宁静，通过光影的变化展现了自然的生命力。
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">尺寸: 80 × 100 cm</p>
+                                <p class="text-sm text-gray-500">媒介: 布面油画</p>
+                            </div>
+                            <button class="add-to-cart bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="3" data-title="山脉的呼吸" data-price="¥600">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 画作 3 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="relative">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ebc81b9821744517a1d8b15d512755a7.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=RWrQf43Dl2yPQrwnYHMcbgn%2BSEo%3D" alt="画作" class="w-full h-64 object-cover">
+                        <div class="absolute top-4 right-4 bg-gray-500 text-white text-sm py-1 px-3 rounded-full">
+                            限量版
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-display font-bold text-gray-800">色彩的灵魂</h3>
+                            <p class="text-neon font-bold">¥800</p>
+                        </div>
+                        <p class="text-gray-600 mb-6">
+                            这幅肖像画通过丰富的色彩和细腻的笔触，展现了人物内心的情感世界。
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">尺寸: 70 × 90 cm</p>
+                                <p class="text-sm text-gray-500">媒介: 布面油画</p>
+                            </div>
+                            <button class="add-to-cart bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="6" data-title="色彩的灵魂" data-price="¥800">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 画作 4 -->
+                <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="relative">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/c236981ac9884a17bf51c1f9cf45a66a.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=wEPEMCRw%2BvGPMrylEm%2BP4w9152E%3D" alt="艺术装置" class="w-full h-64 object-cover">
+                        <div class="absolute top-4 right-4 bg-blue-500 text-white text-sm py-1 px-3 rounded-full">
+                            新品
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-xl font-display font-bold text-gray-800">光影的边界</h3>
+                            <p class="text-neon font-bold">¥1000</p>
+                        </div>
+                        <p class="text-gray-600 mb-6">
+                            这件艺术装置探索了光影与空间的关系，通过透明材料和光线的相互作用，创造出一种沉浸式的视觉体验。
+                        </p>
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm text-gray-500">尺寸: 可变</p>
+                                <p class="text-sm text-gray-500">媒介: 混合媒介、灯光装置</p>
+                            </div>
+                            <button class="add-to-cart bg-neon hover:bg-opacity-80 text-white py-2 px-4 rounded transition-all" data-id="7" data-title="光影的边界" data-price="¥1000">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 查看更多按钮 -->
+            <div class="text-center mt-12">
+                <a href="#" class="bg-dark hover:bg-opacity-80 text-white font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 inline-block">
+                    查看更多作品
+                </a>
+            </div>
+            
+            <!-- 购物车 -->
+            <div id="cart" class="fixed bottom-4 right-4 z-40">
+                <button id="cart-toggle" class="bg-neon hover:bg-opacity-80 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110">
+                    <i class="fas fa-shopping-cart text-2xl"></i>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-dark text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">0</span>
+                </button>
+                
+                <div id="cart-dropdown" class="hidden absolute bottom-20 right-0 bg-white rounded-lg shadow-2xl w-80 p-4">
+                    <h3 class="text-xl font-display font-bold mb-4">购物车</h3>
+                    <div id="cart-items" class="max-h-64 overflow-y-auto mb-4">
+                        <!-- 购物车为空时显示 -->
+                        <div id="empty-cart" class="text-center py-4">
+                            <i class="fas fa-shopping-cart text-gray-300 text-4xl mb-2"></i>
+                            <p class="text-gray-500">购物车为空</p>
+                        </div>
+                        <!-- 购物车项目将在这里动态添加 -->
+                    </div>
+                    <div class="border-t border-gray-200 pt-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="font-bold">总计:</p>
+                            <p id="cart-total" class="font-bold text-neon">¥0</p>
+                        </div>
+                        <button id="checkout-btn" class="w-full bg-neon hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded transition-all">
+                            结算
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 乐迷互动留言板 -->
+    <section id="contact" class="py-20 bg-dark text-light">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-display font-bold mb-4 neon-text">联系与留言</h2>
+                <div class="w-24 h-1 bg-neon mx-auto mb-6"></div>
+                <p class="text-xl max-w-2xl mx-auto">
+                    欢迎留下您的评论和建议，或通过以下方式与陈齐联系。
+                </p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-12">
+                <!-- 留言板 -->
+                <div class="lg:w-1/2">
+                    <h3 class="text-2xl font-display font-bold mb-8">留言板</h3>
+                    
+                    <!-- 留言表单 -->
+                    <div class="bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-8">
+                        <h4 class="text-xl font-display font-bold mb-4">留下您的留言</h4>
+                        <form id="message-form">
+                            <div class="mb-4">
+                                <label for="name" class="block mb-2">姓名</label>
+                                <input type="text" id="name" class="w-full bg-transparent border border-gray-600 rounded px-4 py-2 text-light focus:outline-none focus:border-neon">
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block mb-2">邮箱</label>
+                                <input type="email" id="email" class="w-full bg-transparent border border-gray-600 rounded px-4 py-2 text-light focus:outline-none focus:border-neon">
+                            </div>
+                            <div class="mb-4">
+                                <label for="message" class="block mb-2">留言内容</label>
+                                <textarea id="message" rows="4" class="w-full bg-transparent border border-gray-600 rounded px-4 py-2 text-light focus:outline-none focus:border-neon"></textarea>
+                            </div>
+                            <button type="submit" class="bg-neon hover:bg-opacity-80 text-white font-bold py-2 px-6 rounded transition-all">
+                                提交留言
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- 留言列表 -->
+                    <div>
+                        <h4 class="text-xl font-display font-bold mb-4">最新留言</h4>
+                        <div id="messages-container">
+                            <!-- 留言将在这里动态添加 -->
+                            <div class="message-card bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-4">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h5 class="font-bold">张小姐</h5>
+                                    <span class="text-sm text-gray-400">2023-07-15</span>
+                                </div>
+                                <p>
+                                    陈齐的画作真的很有感染力，尤其是《色彩的对话》这幅作品，
+                                    每次看到都能感受到不同的情绪。希望能有机会看到更多您的作品！
+                                </p>
+                            </div>
+                            <div class="message-card bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-4">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h5 class="font-bold">王先生</h5>
+                                    <span class="text-sm text-gray-400">2023-07-10</span>
+                                </div>
+                                <p>
+                                    我在现代艺术博物馆参观了您的展览，非常喜欢您对色彩的运用和表达方式。
+                                    请问您下一次展览是什么时候？
+                                </p>
+                            </div>
+                            <div class="message-card bg-black bg-opacity-50 rounded-lg p-6 shadow-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h5 class="font-bold">刘女士</h5>
+                                    <span class="text-sm text-gray-400">2023-07-05</span>
+                                </div>
+                                <p>
+                                    我购买了您的《山脉的呼吸》这幅作品，挂在客厅里非常合适，
+                                    每天看到它都能感受到大自然的宁静和力量。谢谢您的创作！
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 联系信息 -->
+                <div class="lg:w-1/2">
+                    <h3 class="text-2xl font-display font-bold mb-8">联系信息</h3>
+                    
+                    <!-- 联系卡片 -->
+                    <div class="bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-8">
+                        <div class="flex items-start mb-6">
+                            <div class="text-neon text-2xl mr-4">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2">工作室地址</h4>
+                                <p>广东省佛山市南海区丹灶云风壹号</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start mb-6">
+                            <div class="text-neon text-2xl mr-4">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2">邮箱</h4>
+                                <p>violet_love22@hotmail.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="text-neon text-2xl mr-4">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2">电话</h4>
+                                <p>+8618664224412</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 社交媒体 -->
+                    <div class="bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-8">
+                        <h4 class="text-xl font-display font-bold mb-6">关注我</h4>
+                        <div class="flex space-x-6">
+                            <a href="#" class="bg-transparent border border-neon text-neon hover:bg-neon hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="bg-transparent border border-neon text-neon hover:bg-neon hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="#" class="bg-transparent border border-neon text-neon hover:bg-neon hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="bg-transparent border border-neon text-neon hover:bg-neon hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all">
+                                <i class="fab fa-behance"></i>
+                            </a>
+                            <a href="#" class="bg-transparent border border-neon text-neon hover:bg-neon hover:text-white w-12 h-12 rounded-full flex items-center justify-center transition-all">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- 订阅通讯 -->
+                    <div class="bg-black bg-opacity-50 rounded-lg p-6 shadow-lg">
+                        <h4 class="text-xl font-display font-bold mb-4">订阅通讯</h4>
+                        <p class="mb-4">
+                            订阅陈齐的通讯，获取最新的作品信息、展览预告和艺术活动。
+                        </p>
+                        <form id="subscribe-form">
+                            <div class="flex">
+                                <input type="email" placeholder="您的邮箱地址" class="flex-1 bg-transparent border border-gray-600 rounded-l px-4 py-2 text-light focus:outline-none focus:border-neon">
+                                <button type="submit" class="bg-neon hover:bg-opacity-80 text-white font-bold py-2 px-4 rounded-r transition-all">
+                                    订阅
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- 页脚 -->
+    <footer class="bg-black text-light py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-8 md:mb-0">
+                    <h2 class="text-2xl font-display font-bold mb-2 neon-text">陈齐艺术空间</h2>
+                    <p class="text-gray-400">探索艺术的无限可能</p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="#home" class="hover:text-neon transition-colors">首页</a>
+                    <a href="#about" class="hover:text-neon transition-colors">关于艺术家</a>
+                    <a href="#paintings" class="hover:text-neon transition-colors">画作</a>
+                    <a href="#exhibitions" class="hover:text-neon transition-colors">展览</a>
+                    <a href="#behind-the-scenes" class="hover:text-neon transition-colors">创作幕后</a>
+                    <a href="#shop" class="hover:text-neon transition-colors">购买</a>
+                    <a href="#contact" class="hover:text-neon transition-colors">联系</a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 mb-4 md:mb-0">© 2023 陈齐艺术空间. 保留所有权利.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-neon transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-400 hover:text-neon transition-colors">使用条款</a>
+                    <a href="#" class="text-gray-400 hover:text-neon transition-colors">配送信息</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-24 right-4 bg-neon hover:bg-opacity-80 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110 opacity-0 invisible">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    
+    <!-- JavaScript -->
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 导航菜单切换
+            const menuToggle = document.getElementById('menu-toggle');
+            const closeMenu = document.getElementById('close-menu');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            
+            menuToggle.addEventListener('click', function() {
+                mobileMenu.classList.add('active');
+            });
+            
+            closeMenu.addEventListener('click', function() {
+                mobileMenu.classList.remove('active');
+            });
+            
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenu.classList.remove('active');
+                });
+            });
+            
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // 返回顶部按钮
+            const backToTopButton = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.remove('opacity-0', 'invisible');
+                    backToTopButton.classList.add('opacity-100', 'visible');
+                } else {
+                    backToTopButton.classList.remove('opacity-100', 'visible');
+                    backToTopButton.classList.add('opacity-0', 'invisible');
+                }
+            });
+            
+            backToTopButton.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // 画作筛选
+            const paintingFilters = document.querySelectorAll('.painting-filter');
+            const paintingCards = document.querySelectorAll('.painting-card');
+            
+            paintingFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    // 移除所有筛选按钮的active类
+                    paintingFilters.forEach(btn => {
+                        btn.classList.remove('active', 'bg-neon');
+                        btn.classList.add('bg-transparent', 'border', 'border-light', 'text-light');
+                    });
+                    
+                    // 添加当前筛选按钮的active类
+                    this.classList.add('active', 'bg-neon');
+                    this.classList.remove('bg-transparent', 'border', 'border-light', 'text-light');
+                    
+                    const category = this.getAttribute('data-category');
+                    
+                    // 筛选画作
+                    paintingCards.forEach(card => {
+                        if (category === 'all' || card.getAttribute('data-category') === category) {
+                            card.style.display = 'block';
+                            setTimeout(() => {
+                                card.classList.add('show');
+                            }, 100);
+                        } else {
+                            card.classList.remove('show');
+                            setTimeout(() => {
+                                card.style.display = 'none';
+                            }, 500);
+                        }
+                    });
+                });
+            });
+            
+            // 画作详情模态框
+            const viewButtons = document.querySelectorAll('.view-painting');
+            const paintingModal = document.getElementById('painting-modal');
+            const closeModal = document.getElementById('close-modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalTitle = document.getElementById('modal-title');
+            const modalYear = document.getElementById('modal-year');
+            const modalSeries = document.getElementById('modal-series');
+            const modalDescription = document.getElementById('modal-description');
+            const modalSize = document.getElementById('modal-size');
+            const modalMedium = document.getElementById('modal-medium');
+            const modalPrice = document.getElementById('modal-price');
+            const addToCartBtn = document.getElementById('add-to-cart');
+            
+            // 画作数据
+            const paintingsData = [
+                {
+                    id: 1,
+                    title: '色彩的对话',
+                    year: '2025',
+                    series: '抽象系列',
+                    description: '这幅作品探索了色彩之间的相互作用和情感表达。通过大胆的色彩对比和流动的线条，我试图捕捉色彩如何影响我们的情绪和感知。每一笔都是情感的直接表达，每一种颜色都是心灵的声音。',
+                    size: '40 × 50 cm',
+                    medium: '布面油画',
+                    price: '¥800',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/d40d620aebfb44d8845e4d3e6e6a501f.jpg~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=rDThYs5QJrRYCpZ7ne0dLOxEDI8%3D'
+                },
+                {
+                    id: 2,
+                    title: '流动的能量',
+                    year: '2025',
+                    series: '抽象系列',
+                    description: '这幅作品灵感来源于城市中流动的人群和能量。通过动态的线条和色彩，我试图捕捉现代生活的节奏和活力。画面中的每一个元素都在不断变化和相互作用，就像城市中的人们一样。',
+                    size: '40 × 50 cm',
+                    medium: '布面油画',
+                    price: '¥600',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/6dd2a91a3447411b9b3dca864d7f6b1f.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=aKiaqTbCYkZq5B0bvJSHkKgB81k%3D'
+                },
+                {
+                    id: 3,
+                    title: '山脉的呼吸',
+                    year: '2025',
+                    series: '风景系列',
+                    description: '这幅风景画捕捉了山脉在不同光线下的变化。我试图通过色彩和光影的变化，展现大自然的生命力和山脉的雄伟。每一笔都是对自然的致敬，每一种颜色都是对生命的赞美。',
+                    size: '40 × 50 cm',
+                    medium: '布面油画',
+                    price: '¥600',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/9bc7b0f52c014818a721f72e4db02b25.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=XwCUecfh0SbcPHVeWuwyskk25m4%3D'
+                },
+                {
+                    id: 4,
+                    title: '宁静的溪谷',
+                    year: '2025',
+                    series: '风景系列',
+                    description: '这幅作品描绘了一个宁静的溪谷，远离城市的喧嚣。我试图通过柔和的色彩和细腻的笔触，展现大自然的宁静和美丽。画面中的每一个元素都在诉说着一个关于和平与和谐的故事。',
+                    size: '40 × 50 cm',
+                    medium: '布面油画',
+                    price: '¥800',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/639e00f2d0e04318a8341c549b97b4d5.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=OlvHmw8r1zMPHAxLklLv8X6PcAQ%3D'
+                },
+                {
+                    id: 5,
+                    title: '思考者',
+                    year: '2025',
+                    series: '肖像系列',
+                    description: '这幅肖像画探索了人类思考的深度和复杂性。通过细腻的笔触和丰富的色彩，我试图捕捉人物内心的情感世界。画面中的每一个细节都在诉说着一个关于人性和生命的故事。',
+                    size: '50 × 60 cm',
+                    medium: '布面油画',
+                    price: '¥9,500',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ebc81b9821744517a1d8b15d512755a7.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=RWrQf43Dl2yPQrwnYHMcbgn%2BSEo%3D'
+                },
+                {
+                    id: 6,
+                    title: '色彩的灵魂',
+                    year: '2025',
+                    series: '肖像系列',
+                    description: '这幅作品通过丰富的色彩和细腻的笔触，展现了人物内心的情感世界。我试图通过色彩的变化和笔触的流动，捕捉人物的灵魂和情感。每一笔都是对人性的探索，每一种颜色都是对生命的赞美。',
+                    size: '40 × 50 cm',
+                    medium: '布面油画',
+                    price: '¥800',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/a271e394b29b4d31b1e1c532a3e36c9a.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=Ifx0EPjqWyD3F0N3wLdDlPvTFlg%3D'
+                },
+                {
+                    id: 7,
+                    title: '光影的边界',
+                    year: '2025',
+                    series: '装置系列',
+                    description: '这件艺术装置探索了光影与空间的关系，通过透明材料和光线的相互作用，创造出一种沉浸式的视觉体验。我试图打破传统绘画的平面限制，让观众能够走进作品中，感受光影的变化和空间的流动。',
+                    size: '可变',
+                    medium: '混合媒介、灯光装置',
+                    price: '¥1000',
+                    image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/c236981ac9884a17bf51c1f9cf45a66a.png~tplv-a9rns2rl98-24:720:720.image?rcl=202510201942140AE9BD78193351198E27&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1761565335&x-signature=wEPEMCRw%2BvGPMrylEm%2BP4w9152E%3D'
+                }
+            ];
+            
+            // 打开模态框
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const paintingId = parseInt(this.getAttribute('data-id'));
+                    const painting = paintingsData.find(p => p.id === paintingId);
+                    
+                    if (painting) {
+                        modalImage.src = painting.image;
+                        modalTitle.textContent = painting.title;
+                        modalYear.textContent = painting.year;
+                        modalSeries.textContent = painting.series;
+                        modalDescription.textContent = painting.description;
+                        modalSize.textContent = painting.size;
+                        modalMedium.textContent = painting.medium;
+                        modalPrice.textContent = painting.price;
+                        
+                        // 设置添加到购物车按钮的数据
+                        addToCartBtn.setAttribute('data-id', painting.id);
+                        addToCartBtn.setAttribute('data-title', painting.title);
+                        addToCartBtn.setAttribute('data-price', painting.price);
+                        
+                        paintingModal.classList.remove('hidden');
+                        document.body.style.overflow = 'hidden';
+                    }
+                });
+            });
+            
+            // 关闭模态框
+            closeModal.addEventListener('click', function() {
+                paintingModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // 点击模态框外部关闭
+            paintingModal.addEventListener('click', function(e) {
+                if (e.target === paintingModal) {
+                    paintingModal.classList.add('hidden');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // 购物车功能
+            const cartToggle = document.getElementById('cart-toggle');
+            const cartDropdown = document.getElementById('cart-dropdown');
+            const cartItems = document.getElementById('cart-items');
+            const emptyCart = document.getElementById('empty-cart');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const addToCartButtons = document.querySelectorAll('.add-to-cart');
+            
+            // 购物车数据
+            let cart = [];
+            
+            // 切换购物车显示
+            cartToggle.addEventListener('click', function() {
+                cartDropdown.classList.toggle('hidden');
+            });
+            
+            // 点击页面其他地方关闭购物车
+            document.addEventListener('click', function(e) {
+                if (!cartToggle.contains(e.target) && !cartDropdown.contains(e.target)) {
+                    cartDropdown.classList.add('hidden');
+                }
+            });
+            
+            // 添加到购物车
+            function addToCart(paintingId, title, price) {
+                // 检查商品是否已在购物车中
+                const existingItem = cart.find(item => item.id === paintingId);
+                
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        id: paintingId,
+                        title: title,
+                        price: parseFloat(price.replace('¥', '').replace(',', '')),
+                        quantity: 1
+                    });
+                }
+                
+                updateCart();
+                showNotification('已添加到购物车');
+            }
+            
+            // 更新购物车
+            function updateCart() {
+                // 更新购物车数量
+                cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+                
+                // 更新购物车总价
+                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                cartTotal.textContent = `¥${total.toLocaleString()}`;
+                
+                // 更新购物车项目
+                if (cart.length === 0) {
+                    emptyCart.classList.remove('hidden');
+                    cartItems.innerHTML = '';
+                    cartItems.appendChild(emptyCart);
+                } else {
+                    emptyCart.classList.add('hidden');
+                    cartItems.innerHTML = '';
+                    
+                    cart.forEach(item => {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'flex justify-between items-center py-3 border-b border-gray-200';
+                        itemElement.innerHTML = `
+                            <div>
+                                <p class="font-bold">${item.title}</p>
+                                <p class="text-sm text-gray-500">¥${item.price.toLocaleString()} × ${item.quantity}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <button class="decrease-quantity bg-gray-200 hover:bg-gray-300 text-gray-800 w-6 h-6 rounded flex items-center justify-center mr-2" data-id="${item.id}">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <button class="increase-quantity bg-gray-200 hover:bg-gray-300 text-gray-800 w-6 h-6 rounded flex items-center justify-center mr-2" data-id="${item.id}">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                                <button class="remove-item text-red-500 hover:text-red-700" data-id="${item.id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        `;
+                        cartItems.appendChild(itemElement);
+                    });
+                    
+                    // 添加事件监听器
+                    document.querySelectorAll('.decrease-quantity').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const itemId = parseInt(this.getAttribute('data-id'));
+                            decreaseQuantity(itemId);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.increase-quantity').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const itemId = parseInt(this.getAttribute('data-id'));
+                            increaseQuantity(itemId);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.remove-item').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const itemId = parseInt(this.getAttribute('data-id'));
+                            removeFromCart(itemId);
+                        });
+                    });
+                }
+            }
+            
+            // 减少数量
+            function decreaseQuantity(itemId) {
+                const item = cart.find(item => item.id === itemId);
+                
+                if (item) {
+                    if (item.quantity > 1) {
+                        item.quantity -= 1;
+                    } else {
+                        removeFromCart(itemId);
+                        return;
+                    }
+                    
+                    updateCart();
+                }
+            }
+            
+            // 增加数量
+            function increaseQuantity(itemId) {
+                const item = cart.find(item => item.id === itemId);
+                
+                if (item) {
+                    item.quantity += 1;
+                    updateCart();
+                }
+            }
+            
+            // 从购物车移除
+            function removeFromCart(itemId) {
+                cart = cart.filter(item => item.id !== itemId);
+                updateCart();
+            }
+            
+            // 结算
+            checkoutBtn.addEventListener('click', function() {
+                if (cart.length > 0) {
+                    showNotification('感谢您的购买！我们将尽快处理您的订单。');
+                    cart = [];
+                    updateCart();
+                    cartDropdown.classList.add('hidden');
+                } else {
+                    showNotification('购物车为空，请先添加商品。');
+                }
+            });
+            
+            // 添加到购物车按钮事件
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const paintingId = parseInt(this.getAttribute('data-id'));
+                    const title = this.getAttribute('data-title');
+                    const price = this.getAttribute('data-price');
+                    
+                    addToCart(paintingId, title, price);
+                });
+            });
+            
+            // 初始化购物车
+            updateCart();
+            
+            // 留言表单提交
+            const messageForm = document.getElementById('message-form');
+            const messagesContainer = document.getElementById('messages-container');
+            
+            messageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const message = document.getElementById('message').value;
+                
+                if (name && email && message) {
+                    // 创建新留言
+                    const newMessage = document.createElement('div');
+                    newMessage.className = 'message-card bg-black bg-opacity-50 rounded-lg p-6 shadow-lg mb-4';
+                    
+                    // 获取当前日期
+                    const today = new Date();
+                    const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    
+                    newMessage.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <h5 class="font-bold">${name}</h5>
+                            <span class="text-sm text-gray-400">${dateString}</span>
+                        </div>
+                        <p>
+                            ${message}
+                        </p>
+                    `;
+                    
+                    // 添加到留言列表的顶部
+                    messagesContainer.insertBefore(newMessage, messagesContainer.firstChild);
+                    
+                    // 重置表单
+                    messageForm.reset();
+                    
+                    // 显示通知
+                    showNotification('留言提交成功！');
+                } else {
+                    showNotification('请填写所有必填字段。');
+                }
+            });
+            
+            // 订阅表单提交
+            const subscribeForm = document.getElementById('subscribe-form');
+            
+            subscribeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = this.querySelector('input[type="email"]').value;
+                
+                if (email) {
+                    // 显示通知
+                    showNotification('订阅成功！感谢您的关注。');
+                    
+                    // 重置表单
+                    this.reset();
+                } else {
+                    showNotification('请输入有效的邮箱地址。');
+                }
+            });
+            
+            // 显示通知
+            function showNotification(message) {
+                // 创建通知元素
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-20 right-4 bg-neon text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full';
+                notification.textContent = message;
+                
+                // 添加到页面
+                document.body.appendChild(notification);
+                
+                // 显示通知
+                setTimeout(() => {
+                    notification.classList.remove('translate-x-full');
+                }, 100);
+                
+                // 3秒后隐藏通知
+                setTimeout(() => {
+                    notification.classList.add('translate-x-full');
+                    
+                    // 移除元素
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // 加载更多按钮
+            const loadMoreBtn = document.getElementById('load-more');
+            
+            loadMoreBtn.addEventListener('click', function() {
+                // 显示加载动画
+                this.innerHTML = '<div class="loader"></div>';
+                
+                // 模拟加载延迟
+                setTimeout(() => {
+                    // 恢复按钮文本
+                    this.innerHTML = '加载更多作品';
+                    
+                    // 显示通知
+                    showNotification('已加载全部作品');
+                    
+                    // 禁用按钮
+                    this.disabled = true;
+                    this.classList.add('opacity-50', 'cursor-not-allowed');
+                }, 1500);
+            });
+            
+            // 初始化GSAP动画
+            initAnimations();
+        });
+        
+        // GSAP动画
+        function initAnimations() {
+            // Hero区域动画
+            gsap.from('#home h1', {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                delay: 0.2
+            });
+            
+            gsap.from('#home p', {
+                opacity: 0,
+                y: 30,
+                duration: 1,
+                delay: 0.5
+            });
+            
+            gsap.from('#home .flex-col', {
+                opacity: 0,
+                y: 30,
+                duration: 1,
+                delay: 0.8
+            });
+            
+            gsap.from('#home img', {
+                opacity: 0,
+                x: 50,
+                duration: 1.2,
+                delay: 0.4
+            });
+            
+            // 滚动触发动画
+            gsap.registerPlugin(ScrollTrigger);
+            
+            // 关于艺术家区域
+            gsap.from('#about h2', {
+                scrollTrigger: {
+                    trigger: '#about',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.from('#about img', {
+                scrollTrigger: {
+                    trigger: '#about',
+                    start: 'top 60%'
+                },
+                opacity: 0,
+                x: -50,
+                duration: 0.8,
+                delay: 0.3
+            });
+            
+            gsap.from('#about .md\\:w-2\\/3', {
+                scrollTrigger: {
+                    trigger: '#about',
+                    start: 'top 60%'
+                },
+                opacity: 0,
+                x: 50,
+                duration: 0.8,
+                delay: 0.3
+            });
+            
+            // 画作展示区域
+            gsap.from('#paintings h2', {
+                scrollTrigger: {
+                    trigger: '#paintings',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.from('#paintings .painting-filter', {
+                scrollTrigger: {
+                    trigger: '#paintings',
+                    start: 'top 70%'
+                },
+                opacity: 0,
+                y: 30,
+                duration: 0.8,
+                stagger: 0.1
+            });
+            
+            // 画作卡片动画
+            gsap.utils.toArray('.painting-card').forEach((card, i) => {
+                gsap.to(card, {
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%'
+                    },
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.8,
+                    delay: i * 0.1
+                });
+            });
+            
+            // 展览日程区域
+            gsap.from('#exhibitions h2', {
+                scrollTrigger: {
+                    trigger: '#exhibitions',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.utils.toArray('.timeline-item').forEach((item, i) => {
+                gsap.from(item, {
+                    scrollTrigger: {
+                        trigger: item,
+                        start: 'top 80%'
+                    },
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    delay: i * 0.2
+                });
+            });
+            
+            // 创作幕后区域
+            gsap.from('#behind-the-scenes h2', {
+                scrollTrigger: {
+                    trigger: '#behind-the-scenes',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.from('#behind-the-scenes .flex-col', {
+                scrollTrigger: {
+                    trigger: '#behind-the-scenes',
+                    start: 'top 70%'
+                },
+                opacity: 0,
+                y: 30,
+                duration: 0.8,
+                stagger: 0.2
+            });
+            
+            // 画作购买区域
+            gsap.from('#shop h2', {
+                scrollTrigger: {
+                    trigger: '#shop',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.utils.toArray('#shop .bg-white').forEach((card, i) => {
+                gsap.from(card, {
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%'
+                    },
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    delay: i * 0.1
+                });
+            });
+            
+            // 联系与留言区域
+            gsap.from('#contact h2', {
+                scrollTrigger: {
+                    trigger: '#contact',
+                    start: 'top 80%'
+                },
+                opacity: 0,
+                y: 50,
+                duration: 0.8
+            });
+            
+            gsap.from('#contact .lg\\:w-1\\/2', {
+                scrollTrigger: {
+                    trigger: '#contact',
+                    start: 'top 70%'
+                },
+                opacity: 0,
+                y: 30,
+                duration: 0.8,
+                stagger: 0.2
+            });
+        }
+    </script>
+</body>
+</html>
